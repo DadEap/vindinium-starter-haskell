@@ -18,17 +18,24 @@ bot :: Bot
 
 myBot :: Bot
 myBot state = do
+    liftIO $ putStrLn $ show (stateViewUrl state)
     liftIO $ putStrLn $ show answer
     liftIO $ putStrLn $ show (heroPos hero)
     liftIO $ putStrLn $ show (tileAt board (heroPos hero) )
     return answer
     where
-        answer = (case (dirFromPath <$> (pathRecurseFastIt board (heroPos hero) othersGold)) of
+        answer = (case (dirFromPath <$> (pathRecurseFastIt board (heroPos hero) getTarget)) of
             Nothing -> Stay
             Just d -> d)
         hero  = stateHero state
         board = gameBoard ( stateGame state )
         turn  = gameTurn (stateGame state)
+        getTarget = if (heroLife hero)  <= 20 && (heroGold hero >= 2) 
+            then getHealth
+            else othersGold
+        getHealth sb sp = case (tileAt sb sp) of
+            TavernTile -> True
+            otherwise  -> False
         othersGold sb sp = case (tileAt sb sp) of
             MineTile Nothing -> True
             MineTile (Just hid) -> hid /= (heroId hero)
