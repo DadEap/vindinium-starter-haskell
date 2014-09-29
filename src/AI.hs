@@ -3,6 +3,8 @@ module AI where
 import Data.List
 import Data.Maybe
 
+import Control.Monad.State
+
 import Vindinium
 
 diffPos :: Pos -> Pos -> Pos
@@ -13,17 +15,25 @@ isNeighbor pa pb = abs ((posX pa) - (posX pb)) + abs ((posY pa) - (posY pb)) == 
 
 neighborDir :: Pos -> Pos -> Dir
 neighborDir pa pb = case ( ((posX pb) - (posX pa)), ((posY pb) - (posY pa)) ) of
-    (1,  0) -> North
-    (-1, 0) -> South
+    (-1,  0) -> North
+    (1,   0) -> South
     (0,  1) -> East
     (0, -1) -> West
     (0,  0) -> Stay
+---neighborDir pa pb = case ( ((posX pb) - (posX pa)), ((posY pb) - (posY pa)) ) of
+--    (-1,  0) -> North
+--    (1,   0) -> South
+--    (0,  1) -> East
+--    (0, -1) -> West
+--    (0,  0) -> Stay
+
 
 inBoard :: Board -> Pos -> Bool
-inBoard b p = ((posX p) < (boardSize b)) && ((posY p) < (boardSize b)) && (posX p) >= 0 && (posY p) >= 0
+inBoard b (Pos x y) = (x < s) && (y < s) && (x >= 0) && (y >= 0)
+                    where s = boardSize b
 
 tileAt :: Board -> Pos -> Tile
-tileAt b p = (boardTiles b) !! ( (posY p)*(boardSize b) + (posX p) )
+tileAt b (Pos x y) = (boardTiles b) !! ( x*(boardSize b) + y)
 
 testBoard = Board 3 [ FreeTile, FreeTile, FreeTile,
                       WoodTile, FreeTile, WoodTile,
@@ -32,8 +42,6 @@ testBoard = Board 3 [ FreeTile, FreeTile, FreeTile,
 walkable :: Board -> Pos -> Bool
 walkable b p = case (tileAt b p) of
     FreeTile    -> True
-    MineTile _  -> True
-    TavernTile  -> True
     otherwise   -> False
 
 getNeighbors :: Board -> Pos -> [Pos]
@@ -67,4 +75,46 @@ dirFromPath :: [Pos] -> Dir
 dirFromPath []      = Stay
 dirFromPath (x:[])  = Stay
 dirFromPath path    = head $ dirsFromPath path
+
+type TilePred = Board -> Pos -> Bool
+
+data PathState = PathState {
+    pathStateVisited :: [Pos],
+    pathStateQueue   :: [ [Pos] ]
+}
+
+pathRecurseFast :: Board -> Pos -> TilePred -> Control.Monad.State.State PathState (Maybe [Pos])
+pathRecurseFast b pa tilePred = do
+    pathState <- get
+    case (pathStateQueue pathState) of
+        [] -> return Nothing
+        otherwise -> processQueue b pa tilePred pathState
+
+skipRest :: Board -> Pos -> TilePred -> PathState -> Pos -> Control.Monad.State.State PathState (Maybe [Pos])
+skipRest b pa tilePred pathState currHead = do {
+    put ( PathState (currHead:visited) (tail $ pathStateQueue pathState ) );
+    (pathRecurseFast b pa tilePred)
+} where visited   = pathStateVisited pathState
+
+processQueue :: Board -> Pos -> TilePred -> PathState -> Control.Monad.State.State PathState (Maybe [Pos])
+processQueue b pa tilePred pathState
+    | tilePred b currHead       = return (Just (reverse currPath))
+    | not (walkable b currHead) && currHead /= pa = skipRest b pa tilePred pathState currHead
+    | null neighbors            = skipRest b pa tilePred pathState currHead
+    | currHead `elem` visited   = skipRest b pa tilePred pathState currHead
+    | otherwise = do {
+        put $ PathState (currHead:visited) ( (tail (pathStateQueue pathState)) ++ [ (n:currPath) | n <- neighbors ] );
+        pathRecurseFast b pa tilePred
+    }
+    where visited   = pathStateVisited pathState
+          currPath  = head (pathStateQueue pathState)
+          currHead  = head currPath
+          neighbors = filter (\x -> not (x `elem` visited)) (getNeighbors b currHead)
+
+pathRecurseFastIt :: Board -> Pos -> TilePred -> Maybe [Pos]
+pathRecurseFastIt b pa tilePred = evalState (pathRecurseFast b pa tilePred) (PathState [] [[pa]])
+
+posPred p = (\b pa -> pa == p)
+
+testBoard2 = Board {boardSize = 10, boardTiles = [WoodTile,WoodTile,HeroTile (HeroId 1),FreeTile,FreeTile,FreeTile,FreeTile,HeroTile (HeroId 4),WoodTile,WoodTile,WoodTile,WoodTile,WoodTile,MineTile Nothing,FreeTile,FreeTile,MineTile (Just (HeroId 4)),WoodTile,WoodTile,WoodTile,WoodTile,WoodTile,TavernTile,FreeTile,FreeTile,FreeTile,FreeTile,TavernTile,WoodTile,WoodTile,WoodTile,FreeTile,FreeTile,FreeTile,FreeTile,FreeTile,FreeTile,FreeTile,FreeTile,WoodTile,WoodTile,WoodTile,WoodTile,FreeTile,WoodTile,WoodTile,FreeTile,WoodTile,WoodTile,WoodTile,WoodTile,WoodTile,WoodTile,FreeTile,WoodTile,WoodTile,FreeTile,WoodTile,WoodTile,WoodTile,WoodTile,FreeTile,FreeTile,FreeTile,FreeTile,FreeTile,FreeTile,FreeTile,FreeTile,WoodTile,WoodTile,WoodTile,TavernTile,FreeTile,FreeTile,FreeTile,HeroTile (HeroId 2),TavernTile,WoodTile,WoodTile,WoodTile,WoodTile,WoodTile,MineTile Nothing,FreeTile,FreeTile,MineTile (Just (HeroId 3)),WoodTile,WoodTile,WoodTile,WoodTile,WoodTile,FreeTile,FreeTile,FreeTile,FreeTile,FreeTile,HeroTile (HeroId 3),WoodTile,WoodTile]}
 

@@ -17,13 +17,19 @@ bot :: Bot
 --bot = randomBot
 
 myBot :: Bot
-myBot state = case (dirFromPath <$> (pathToTilePred board (heroPos hero) othersGold)) of
-    Nothing -> return Stay
-    Just d  -> return d
+myBot state = do
+    liftIO $ putStrLn $ show answer
+    liftIO $ putStrLn $ show (heroPos hero)
+    liftIO $ putStrLn $ show (tileAt board (heroPos hero) )
+    return answer
     where
+        answer = (case (dirFromPath <$> (pathRecurseFastIt board (heroPos hero) othersGold)) of
+            Nothing -> Stay
+            Just d -> d)
         hero  = stateHero state
-        board = gameBoard $ stateGame state
-        othersGold t = case t of
+        board = gameBoard ( stateGame state )
+        turn  = gameTurn (stateGame state)
+        othersGold sb sp = case (tileAt sb sp) of
             MineTile Nothing -> True
             MineTile (Just hid) -> hid /= (heroId hero)
             otherwise      -> False
@@ -32,7 +38,7 @@ myBot state = case (dirFromPath <$> (pathToTilePred board (heroPos hero) othersG
 randomBot :: Bot
 randomBot _ = liftM fromJust $ liftIO $ pickRandom [Stay, North, South, East, West]
 
-bot = randomBot
+bot = myBot
 
 pickRandom :: [a] -> IO (Maybe a)
 pickRandom [] = return Nothing
