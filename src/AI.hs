@@ -10,7 +10,7 @@ import Vindinium
 diffPos :: Pos -> Pos -> Pos
 diffPos pa pb = Pos (posX pa - posX pb) (posY pa - posY pb)
 
-isNeighbor :: Pos -> Pos -> Bool
+isNeighbor :: Pos -> Pos -> Bool 
 isNeighbor pa pb = abs ((posX pa) - (posX pb)) + abs ((posY pa) - (posY pb)) == 1
 
 isCloseNeighbor :: Pos -> Pos -> Bool
