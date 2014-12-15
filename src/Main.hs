@@ -20,7 +20,7 @@ cmdSettings (Arena s) = s
 settings :: Parser Settings
 settings = Settings <$> (Key <$> argument (Just . pack) (metavar "KEY"))
                     <*> (fromString <$> strOption (long "url" <> value "http://vindinium.org"))
-
+{-
 trainingCmd :: Parser Cmd
 trainingCmd = Training <$> settings
                        <*> optional (option (long "turns"))
@@ -36,7 +36,7 @@ cmd = subparser
    <> command "arena" (info arenaCmd
         (progDesc "Run bot in arena mode" ))
     )
-
+-}
 runCmd :: Cmd -> IO ()
 runCmd c  = do
     s <- runVindinium (cmdSettings c) $ do
@@ -48,6 +48,9 @@ runCmd c  = do
 
 main :: IO ()
 main =
+    runCmd $ Arena (Settings (Key "uyiohnnz") "http://www.vindinium.org")
+    {-
     execParser opts >>= runCmd
   where
     opts = info (cmd <**> helper) idm
+    -}

@@ -13,6 +13,9 @@ diffPos pa pb = Pos (posX pa - posX pb) (posY pa - posY pb)
 isNeighbor :: Pos -> Pos -> Bool
 isNeighbor pa pb = abs ((posX pa) - (posX pb)) + abs ((posY pa) - (posY pb)) == 1
 
+isCloseNeighbor :: Pos -> Pos -> Bool
+isCloseNeighbor pa pb = abs ((posX pa) - (posX pb)) + abs ((posY pa) - (posY pb)) <= 3
+
 neighborDir :: Pos -> Pos -> Dir
 neighborDir pa pb = case ( ((posX pb) - (posX pa)), ((posY pb) - (posY pa)) ) of
     (-1,  0) -> North
