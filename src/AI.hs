@@ -4,13 +4,14 @@ import Data.List
 import Data.Maybe
 
 import Control.Monad.State
+import Control.Applicative
 
 import Vindinium
 
 diffPos :: Pos -> Pos -> Pos
 diffPos pa pb = Pos (posX pa - posX pb) (posY pa - posY pb)
 
-isNeighbor :: Pos -> Pos -> Bool 
+isNeighbor :: Pos -> Pos -> Bool
 isNeighbor pa pb = abs ((posX pa) - (posX pb)) + abs ((posY pa) - (posY pb)) == 1
 
 isCloseNeighbor :: Pos -> Pos -> Bool
@@ -23,13 +24,6 @@ neighborDir pa pb = case ( ((posX pb) - (posX pa)), ((posY pb) - (posY pa)) ) of
     (0,  1) -> East
     (0, -1) -> West
     (0,  0) -> Stay
----neighborDir pa pb = case ( ((posX pb) - (posX pa)), ((posY pb) - (posY pa)) ) of
---    (-1,  0) -> North
---    (1,   0) -> South
---    (0,  1) -> East
---    (0, -1) -> West
---    (0,  0) -> Stay
-
 
 inBoard :: Board -> Pos -> Bool
 inBoard b (Pos x y) = (x < s) && (y < s) && (x >= 0) && (y >= 0)
@@ -49,6 +43,26 @@ walkable b p = case (tileAt b p) of
 
 getNeighbors :: Board -> Pos -> [Pos]
 getNeighbors b p = filter (inBoard b) (map (\(x,y) -> Pos (x + (posX p)) (y + (posY p)) ) [ (1, 0), (-1, 0), (0, 1), (0, -1) ] )
+
+isCloseTavern :: Board -> Pos -> Bool
+isCloseTavern b p = any (== TavernTile) $ map (tileAt b) (getNeighbors b p)
+{-
+getNumberMines :: Board -> Int
+getNumberMines b = length $ (filter (== MineTile Nothing) (boardTiles b)) ++ 
+                    (filter (== MineTile (Just (HeroId 1))) (boardTiles b))  ++
+                        (filter (== MineTile (Just (HeroId 2))) (boardTiles b))  ++
+                            (filter (== MineTile (Just (HeroId 3))) (boardTiles b))  ++
+                                (filter (== MineTile (Just (HeroId 4))) (boardTiles b) )
+-}
+{-
+getTotalMineCount :: Board -> [Hero] -> Int
+getTotalMineCount b heroes = length . filter (==True) $ isMineList
+    where
+        mineCombination = MineTile <$> Nothing: ((Just . heroId) <$> heroes) -- <=> [Nothing, Just MineTile (Maybe HeroId)..]
+        isMineList = (==) <$> mineCombination <*> (boardTiles b) -- <=> List of Boolean, True if MineTile
+-}
+getTotalMineCount :: Board -> [Hero] -> Integer
+getTotalMineCount b heroes = (sum $ heroMineCount <$> heroes) + toInteger (length $ (filter (== MineTile Nothing) (boardTiles b)))
 
 pathRecurse :: Board -> [Pos] -> Pos -> (Board -> Pos -> Bool) -> Int -> Maybe [Pos]
 pathRecurse b visited pa tilePred maxLen

@@ -47,8 +47,10 @@ runCmd c  = do
     putStrLn $ "Game finished: " ++ unpack (stateViewUrl s)
 
 main :: IO ()
-main =
-    runCmd $ Arena (Settings (Key "uyiohnnz") "http://www.vindinium.org")
+main = do
+    runCmd $ Arena (Settings (Key "bea6t57r") "http://www.vindinium.org")
+    --runCmd $ Arena (Settings (Key "k6r8v2e6") "http://www.vindinium.org")
+    --runCmd $ Training (Settings (Key "uyiohnnz") "http://www.vindinium.org") (Just 200) Nothing
     {-
     execParser opts >>= runCmd
   where
