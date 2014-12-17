@@ -32,7 +32,6 @@ move :: State -> Dir -> Vindinium State
 move s d = do
     let url = statePlayUrl s
         obj = object [("dir", toJSON d)]
-
     request url obj
 
 

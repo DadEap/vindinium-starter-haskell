@@ -22,9 +22,10 @@ myBot state = do
     liftIO $ putStrLn $ show (stateViewUrl state)
     liftIO $ putStrLn $ show answer
     liftIO $ putStrLn $ show (heroPos hero)
+    liftIO $ putStrLn $ "Turn : " ++ show turn
     liftIO $ putStrLn $ "Heroes : " ++ show (map heroName heroes)
     liftIO $ putStrLn $ "Gold   : " ++ show (map heroGold heroes)
-    liftIO $ putStrLn $ "Drinking   : " ++ (\a -> if a then "YES" else "NOPE") isDrinking
+    liftIO $ putStrLn $ "Mines : " ++ show (map heroMineCount heroes)
     liftIO $ putStrLn $ "Mine Percent   : " ++ show ((fromIntegral $ heroMineCount hero)*100 / (fromIntegral totalMineCount)) ++ "%"
     return answer
     where
@@ -97,11 +98,11 @@ myBot state = do
         othersGold sb sp = case (tileAt sb sp) of
             MineTile Nothing -> True
             MineTile (Just hid) -> hid /= (heroId hero)
-            otherwise      -> False
+            otherwise  -> False
 
 
 isHeroHurted :: Hero -> Hero -> Integer -> Bool
-isHeroHurted h e v = ((enemyLife <= v && isCloseNeighbor currentPos enemyPos) || (enemyLife < currentLife && isNeighbor currentPos enemyPos))
+isHeroHurted h e v = ((enemyLife + 20 <= currentLife && isCloseNeighbor currentPos enemyPos) || (enemyLife < currentLife && isNeighbor currentPos enemyPos))
     where
         enemyLife = heroLife e
         currentLife = heroLife h
