@@ -48,9 +48,9 @@ runCmd c  = do
 
 main :: IO ()
 main = do
-    runCmd $ Arena (Settings (Key "bea6t57r") "http://www.vindinium.org")
+    --runCmd $ Arena (Settings (Key "bea6t57r") "http://www.vindinium.org")
     --runCmd $ Arena (Settings (Key "k6r8v2e6") "http://www.vindinium.org")
-    --runCmd $ Training (Settings (Key "uyiohnnz") "http://www.vindinium.org") (Just 200) Nothing
+    runCmd $ Training (Settings (Key "uyiohnnz") "http://www.vindinium.org") (Just 50) Nothing
     {-
     execParser opts >>= runCmd
   where

@@ -25,7 +25,7 @@ myBot state = do
     liftIO $ putStrLn $ "Heroes : " ++ show (map heroName heroes)
     liftIO $ putStrLn $ "Gold   : " ++ show (map heroGold heroes)
     liftIO $ putStrLn $ "Drinking   : " ++ (\a -> if a then "YES" else "NOPE") isDrinking
-    liftIO $ putStrLn $ "Number of Mines   : " ++ show totalMineCount
+    liftIO $ putStrLn $ "Mine Percent   : " ++ show ((fromIntegral $ heroMineCount hero)*100 / (fromIntegral totalMineCount)) ++ "%"
     return answer
     where
         answer = (case (dirFromPath <$> (pathRecurseFastIt board (heroPos hero) getTarget)) of
@@ -42,46 +42,8 @@ myBot state = do
         lifeThreshold = 50
         isDrinking = isCloseTavern board (heroPos hero)
         totalMineCount = getTotalMineCount board heroes
-        got50PercentMines = ((heroMineCount hero) `div` totalMineCount) > 50 `div` 100
-        {-
-        getTarget = if (heroLife hero)  <= 50 && (heroGold hero >= 2) 
-            then getHealth
-            else othersGold
-        getHealth sb sp = case (tileAt sb sp) of
-            TavernTile -> True
-            otherwise  -> False
-        othersGold sb sp = case (tileAt sb sp) of
-            MineTile Nothing -> True
-            MineTile (Just hid) -> hid /= (heroId hero)
-            otherwise      -> False
-        -}
-        {-
-        getTarget = if (heroLife hero)  <= 90 && (heroGold hero >= 2)
-            then getHealth
-            else if ( isHeroHurted hero hero2 lifeThreshold)
-                then killHero2
-            else if ( isHeroHurted hero hero3 lifeThreshold)
-                then killHero3
-            else if ( isHeroHurted hero hero4 lifeThreshold)
-                then killHero4
-                else othersGold
-        killHero2 sb sp = case (tileAt sb sp) of
-            HeroTile (HeroId 2) -> True
-            otherwise -> False
-        killHero3 sb sp = case (tileAt sb sp) of
-            HeroTile (HeroId 3) -> True
-            otherwise -> False
-        killHero4 sb sp = case (tileAt sb sp) of
-            HeroTile (HeroId 4) -> True
-            otherwise -> False
-        getHealth sb sp = case (tileAt sb sp) of
-            TavernTile -> True
-            otherwise  -> False
-        othersGold sb sp = case (tileAt sb sp) of
-            MineTile Nothing -> True
-            MineTile (Just hid) -> hid /= (heroId hero)
-            otherwise      -> False
-        -}
+        got50PercentMines = (fromIntegral $ heroMineCount hero) / (fromIntegral totalMineCount) > ((fromIntegral 45) / (fromIntegral 100))
+
         getTarget = if (got50PercentMines && (heroLife hero < 60))
             then getHealth
             else if (got50PercentMines && (heroLife hero > 60) && isDrinking)
